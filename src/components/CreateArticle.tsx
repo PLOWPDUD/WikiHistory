@@ -89,7 +89,7 @@ export default function CreateArticle({ onCreated, initialArticle }: CreateArtic
 
   const handleAdvancedFileUpload = async (
     e: React.ChangeEvent<HTMLInputElement>, 
-    target: 'flag' | 'arms' | 'section', 
+    target: 'flag' | 'arms' | 'section' | 'gallery', 
     index?: number,
     subIndex?: number
   ) => {
@@ -102,13 +102,21 @@ export default function CreateArticle({ onCreated, initialArticle }: CreateArtic
         const next = { ...p };
         if (target === 'flag' && typeof index === 'number') {
           const newFlags = [...(p.flags || [])];
-          newFlags[index] = base64String;
+          newFlags[index] = { url: base64String, caption: newFlags[index]?.caption || '' };
           next.flags = newFlags;
           if (index === 0) next.flagUrl = base64String;
         } else if (target === 'arms' && typeof index === 'number') {
           const newArms = [...(p.coatsOfArms || [])];
-          newArms[index] = base64String;
+          newArms[index] = { url: base64String, caption: newArms[index]?.caption || '' };
           next.coatsOfArms = newArms;
+        } else if (target === 'gallery') {
+          const images = [...(p.images || [])];
+          if (typeof index === 'number') {
+            images[index] = { ...images[index], url: base64String };
+          } else {
+            images.push({ url: base64String });
+          }
+          next.images = images;
         } else if (target === 'section' && typeof index === 'number') {
           const newSecs = [...(p.sections || [])];
           const section = { ...newSecs[index] };
@@ -153,20 +161,27 @@ export default function CreateArticle({ onCreated, initialArticle }: CreateArtic
     }
   };
 
-  const removeImage = (target: 'flag' | 'arms' | 'section', index?: number, subIndex?: number) => {
+  const removeImage = (target: 'flag' | 'arms' | 'section' | 'gallery', index?: number, subIndex?: number) => {
     setManualData(p => {
       const next = { ...p };
       if (target === 'flag' && typeof index === 'number') {
         const newFlags = [...(p.flags || [])];
-        newFlags[index] = '';
+        if (newFlags[index]) {
+          newFlags.splice(index, 1);
+        }
         next.flags = newFlags;
         if (index === 0) {
-          next.flagUrl = newFlags[0] || newFlags[1] || newFlags[2] || undefined;
+          next.flagUrl = newFlags[0]?.url || undefined;
         }
       } else if (target === 'arms' && typeof index === 'number') {
         const newArms = [...(p.coatsOfArms || [])];
-        newArms[index] = '';
+        if (newArms[index]) {
+          newArms.splice(index, 1);
+        }
         next.coatsOfArms = newArms;
+      } else if (target === 'gallery' && typeof index === 'number') {
+        const images = p.images?.filter((_, i) => i !== index) || [];
+        next.images = images;
       } else if (target === 'section' && typeof index === 'number') {
         const newSecs = [...(p.sections || [])];
         if (newSecs[index]) {
@@ -271,6 +286,7 @@ export default function CreateArticle({ onCreated, initialArticle }: CreateArtic
         type: dataToSave.type || formData.type || 'country',
         infobox: dataToSave.infobox || [],
         sections: dataToSave.sections || [],
+        images: dataToSave.images || [],
         flagUrl: dataToSave.flagUrl || null,
         flags: dataToSave.flags || [],
         coatsOfArms: dataToSave.coatsOfArms || [],
@@ -692,28 +708,42 @@ export default function CreateArticle({ onCreated, initialArticle }: CreateArtic
                               <span className="text-[10px] font-bold text-[#54595d] uppercase opacity-60">Flags (Max 3)</span>
                               <div className="flex gap-2">
                                 {[0, 1, 2].map(i => (
-                                  <div key={i} className="flex-1 aspect-[3/2] bg-[#f8f9fa] border border-[#eaecf0] flex items-center justify-center relative overflow-hidden group hover:border-[#3366cc] transition-colors">
-                                    {manualData.flags?.[i] ? (
-                                      <>
-                                        <img src={manualData.flags[i]} className="w-full h-full object-cover" />
-                                        <button
-                                          onClick={(e) => { e.preventDefault(); removeImage('flag', i); }}
-                                          className="absolute top-1 right-1 bg-white border border-[#a2a9b1] text-[#d33] rounded-sm w-5 h-5 flex items-center justify-center z-10 hover:bg-[#eaecf0]"
-                                          title="Remove flag"
-                                        >
-                                          &times;
-                                        </button>
-                                      </>
-                                    ) : (
-                                      <label className="w-full h-full flex items-center justify-center cursor-pointer">
-                                        <Flag size={14} className="text-[#a2a9b1]" />
-                                        <input 
-                                          type="file" 
-                                          className="hidden" 
-                                          accept="image/*"
-                                          onChange={(e) => handleAdvancedFileUpload(e, 'flag', i)}
-                                        />
-                                      </label>
+                                  <div key={i} className="flex-1 space-y-1">
+                                    <div className="aspect-[3/2] bg-[#f8f9fa] border border-[#eaecf0] flex items-center justify-center relative overflow-hidden group hover:border-[#3366cc] transition-colors">
+                                      {manualData.flags?.[i] ? (
+                                        <>
+                                          <img src={manualData.flags[i].url} className="w-full h-full object-cover" />
+                                          <button
+                                            onClick={(e) => { e.preventDefault(); removeImage('flag', i); }}
+                                            className="absolute top-1 right-1 bg-white border border-[#a2a9b1] text-[#d33] rounded-sm w-4 h-4 flex items-center justify-center z-10 hover:bg-[#eaecf0]"
+                                            title="Remove flag"
+                                          >
+                                            &times;
+                                          </button>
+                                        </>
+                                      ) : (
+                                        <label className="w-full h-full flex items-center justify-center cursor-pointer">
+                                          <Flag size={14} className="text-[#a2a9b1]" />
+                                          <input 
+                                            type="file" 
+                                            className="hidden" 
+                                            accept="image/*"
+                                            onChange={(e) => handleAdvancedFileUpload(e, 'flag', i)}
+                                          />
+                                        </label>
+                                      )}
+                                    </div>
+                                    {manualData.flags?.[i] && (
+                                      <input 
+                                        placeholder="Caption..." 
+                                        value={manualData.flags[i].caption || ''}
+                                        onChange={e => {
+                                          const newFlags = [...(manualData.flags || [])];
+                                          newFlags[i] = { ...newFlags[i], caption: e.target.value };
+                                          setManualData(p => ({ ...p, flags: newFlags }));
+                                        }}
+                                        className="w-full text-[9px] border border-[#eaecf0] px-1 py-0.5 outline-none focus:border-[#3366cc]"
+                                      />
                                     )}
                                   </div>
                                 ))}
@@ -724,28 +754,42 @@ export default function CreateArticle({ onCreated, initialArticle }: CreateArtic
                               <span className="text-[10px] font-bold text-[#54595d] uppercase opacity-60">Coats of Arms (Max 2)</span>
                               <div className="flex gap-2">
                                 {[0, 1].map(i => (
-                                  <div key={i} className="flex-1 aspect-square bg-[#f8f9fa] border border-[#eaecf0] flex items-center justify-center relative overflow-hidden group hover:border-[#3366cc] transition-colors">
-                                    {manualData.coatsOfArms?.[i] ? (
-                                      <>
-                                        <img src={manualData.coatsOfArms[i]} className="w-full h-full object-cover" />
-                                        <button
-                                          onClick={(e) => { e.preventDefault(); removeImage('arms', i); }}
-                                          className="absolute top-1 right-1 bg-white border border-[#a2a9b1] text-[#d33] rounded-sm w-5 h-5 flex items-center justify-center z-10 hover:bg-[#eaecf0]"
-                                          title="Remove coat of arms"
-                                        >
-                                          &times;
-                                        </button>
-                                      </>
-                                    ) : (
-                                      <label className="w-full h-full flex items-center justify-center cursor-pointer">
-                                        <Shield size={14} className="text-[#a2a9b1]" />
-                                        <input 
-                                          type="file" 
-                                          className="hidden" 
-                                          accept="image/*"
-                                          onChange={(e) => handleAdvancedFileUpload(e, 'arms', i)}
-                                        />
-                                      </label>
+                                  <div key={i} className="flex-1 space-y-1">
+                                    <div className="aspect-square bg-[#f8f9fa] border border-[#eaecf0] flex items-center justify-center relative overflow-hidden group hover:border-[#3366cc] transition-colors">
+                                      {manualData.coatsOfArms?.[i] ? (
+                                        <>
+                                          <img src={manualData.coatsOfArms[i].url} className="w-full h-full object-cover" />
+                                          <button
+                                            onClick={(e) => { e.preventDefault(); removeImage('arms', i); }}
+                                            className="absolute top-1 right-1 bg-white border border-[#a2a9b1] text-[#d33] rounded-sm w-4 h-4 flex items-center justify-center z-10 hover:bg-[#eaecf0]"
+                                            title="Remove coat of arms"
+                                          >
+                                            &times;
+                                          </button>
+                                        </>
+                                      ) : (
+                                        <label className="w-full h-full flex items-center justify-center cursor-pointer">
+                                          <Shield size={14} className="text-[#a2a9b1]" />
+                                          <input 
+                                            type="file" 
+                                            className="hidden" 
+                                            accept="image/*"
+                                            onChange={(e) => handleAdvancedFileUpload(e, 'arms', i)}
+                                          />
+                                        </label>
+                                      )}
+                                    </div>
+                                    {manualData.coatsOfArms?.[i] && (
+                                      <input 
+                                        placeholder="Caption..." 
+                                        value={manualData.coatsOfArms[i].caption || ''}
+                                        onChange={e => {
+                                          const newArms = [...(manualData.coatsOfArms || [])];
+                                          newArms[i] = { ...newArms[i], caption: e.target.value };
+                                          setManualData(p => ({ ...p, coatsOfArms: newArms }));
+                                        }}
+                                        className="w-full text-[9px] border border-[#eaecf0] px-1 py-0.5 outline-none focus:border-[#3366cc]"
+                                      />
                                     )}
                                   </div>
                                 ))}
@@ -756,33 +800,89 @@ export default function CreateArticle({ onCreated, initialArticle }: CreateArtic
                       ) : (
                         <>
                           <label className="block text-xs font-bold text-[#54595d] uppercase mb-3 underline decoration-[#3366cc]">Main Image</label>
-                          <div className="w-48 aspect-square bg-[#f8f9fa] border border-[#eaecf0] flex items-center justify-center relative overflow-hidden group hover:border-[#3366cc] transition-colors">
-                            {manualData.flags?.[0] ? (
-                              <>
-                                <img src={manualData.flags[0]} className="w-full h-full object-cover" />
-                                <button
-                                  onClick={(e) => { e.preventDefault(); removeImage('flag', 0); }}
-                                  className="absolute top-1 right-1 bg-white border border-[#a2a9b1] text-[#d33] rounded-sm w-5 h-5 flex items-center justify-center z-10 hover:bg-[#eaecf0]"
-                                  title="Remove image"
-                                >
-                                  &times;
-                                </button>
-                              </>
-                            ) : (
-                              <label className="w-full h-full flex flex-col gap-2 items-center justify-center cursor-pointer text-[#a2a9b1]">
-                                <ImageIcon size={24} />
-                                <span className="text-[10px] font-bold uppercase">Upload Image</span>
+                          <div className="flex gap-4 items-start">
+                            <div className="w-48 space-y-1">
+                              <div className="aspect-square bg-[#f8f9fa] border border-[#eaecf0] flex items-center justify-center relative overflow-hidden group hover:border-[#3366cc] transition-colors">
+                                {manualData.flags?.[0] ? (
+                                  <>
+                                    <img src={manualData.flags[0].url} className="w-full h-full object-cover" />
+                                    <button
+                                      onClick={(e) => { e.preventDefault(); removeImage('flag', 0); }}
+                                      className="absolute top-1 right-1 bg-white border border-[#a2a9b1] text-[#d33] rounded-sm w-5 h-5 flex items-center justify-center z-10 hover:bg-[#eaecf0]"
+                                      title="Remove image"
+                                    >
+                                      &times;
+                                    </button>
+                                  </>
+                                ) : (
+                                  <label className="w-full h-full flex flex-col gap-2 items-center justify-center cursor-pointer text-[#a2a9b1]">
+                                    <ImageIcon size={24} />
+                                    <span className="text-[10px] font-bold uppercase">Upload Image</span>
+                                    <input 
+                                      type="file" 
+                                      className="hidden" 
+                                      accept="image/*"
+                                      onChange={(e) => handleAdvancedFileUpload(e, 'flag', 0)}
+                                    />
+                                  </label>
+                                )}
+                              </div>
+                              {manualData.flags?.[0] && (
                                 <input 
-                                  type="file" 
-                                  className="hidden" 
-                                  accept="image/*"
-                                  onChange={(e) => handleAdvancedFileUpload(e, 'flag', 0)}
+                                  placeholder="Caption..." 
+                                  value={manualData.flags[0].caption || ''}
+                                  onChange={e => {
+                                    const newFlags = [...(manualData.flags || [])];
+                                    newFlags[0] = { ...newFlags[0], caption: e.target.value };
+                                    setManualData(p => ({ ...p, flags: newFlags }));
+                                  }}
+                                  className="w-full text-[10px] border border-[#eaecf0] px-1 py-1 outline-none focus:border-[#3366cc]"
                                 />
-                              </label>
-                            )}
+                              )}
+                            </div>
                           </div>
                         </>
                       )}
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold text-[#54595d] uppercase mb-4 underline decoration-[#3366cc]">Main Gallery / Key Images</label>
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+                        {manualData.images?.map((img, i) => (
+                          <div key={i} className="space-y-2">
+                            <div className="aspect-square bg-[#f8f9fa] border border-[#eaecf0] flex items-center justify-center relative overflow-hidden group hover:border-[#3366cc] transition-colors">
+                              <img src={img.url} className="w-full h-full object-cover" />
+                              <button
+                                onClick={(e) => { e.preventDefault(); removeImage('gallery', i); }}
+                                className="absolute top-1 right-1 bg-white border border-[#a2a9b1] text-[#d33] rounded-sm w-5 h-5 flex items-center justify-center z-10 hover:bg-[#eaecf0]"
+                                title="Remove image"
+                              >
+                                &times;
+                              </button>
+                            </div>
+                            <input 
+                              placeholder="Key caption..."
+                              value={img.caption || ''}
+                              onChange={e => {
+                                const images = [...(manualData.images || [])];
+                                images[i] = { ...images[i], caption: e.target.value };
+                                setManualData(p => ({ ...p, images }));
+                              }}
+                              className="w-full text-[10px] border border-[#eaecf0] px-1 py-1 outline-none focus:border-[#3366cc]"
+                            />
+                          </div>
+                        ))}
+                        <label className="aspect-square border border-[#a2a9b1] border-dashed flex flex-col items-center justify-center gap-2 hover:bg-[#f8f9fa] cursor-pointer transition-colors text-[#3366cc]">
+                          <ImageIcon className="w-6 h-6" />
+                          <span className="text-[10px] font-bold uppercase">Add Photo</span>
+                          <input 
+                            type="file" 
+                            className="hidden" 
+                            accept="image/*"
+                            onChange={(e) => handleAdvancedFileUpload(e, 'gallery')}
+                          />
+                        </label>
+                      </div>
                     </div>
 
                     <div className="pt-4 border-t border-[#eaecf0]">

@@ -18,7 +18,7 @@ const TYPE_ICONS: Record<ArticleType, any> = {
 };
 
 export default function Infobox({ article, isLoading }: InfoboxProps) {
-  const flags = (article.flags?.length ? article.flags : (article.flagUrl ? [article.flagUrl] : [])).filter(Boolean);
+  const flags = (article.flags?.length ? article.flags : (article.flagUrl ? [{ url: article.flagUrl }] : [])).filter(Boolean);
   const arms = (article.coatsOfArms || []).filter(Boolean);
   
   const [activeTab, setActiveTab] = useState<'flags' | 'arms'>(flags.length > 0 ? 'flags' : 'arms');
@@ -62,49 +62,76 @@ export default function Infobox({ article, isLoading }: InfoboxProps) {
                 </div>
               )}
 
-              <div className="flex flex-wrap justify-center gap-2 p-1 min-h-[140px] items-center">
+              <div className="space-y-4 py-2">
                 {activeTab === 'flags' ? (
-                  flags.map((url, i) => (
-                    <img 
-                      key={i}
-                      src={url} 
-                      alt={`Flag ${i + 1}`} 
-                      className={cn(
-                        "object-contain border border-[#eaecf0] shadow-sm",
-                        flags.length === 1 ? "max-h-[180px] w-full" : "max-h-[80px] max-w-[45%]"
+                  flags.map((img: any, i) => (
+                    <div key={i} className="space-y-1">
+                      <div className="flex justify-center">
+                        <img 
+                          src={img.url} 
+                          alt={img.caption || `Flag ${i + 1}`} 
+                          className={cn(
+                            "object-contain border border-[#eaecf0] shadow-sm",
+                            flags.length === 1 ? "max-h-[180px] w-full" : "max-h-[100px] max-w-[80%]"
+                          )}
+                          referrerPolicy="no-referrer"
+                        />
+                      </div>
+                      {img.caption && (
+                        <p className="text-[10px] text-center text-[#54595d] italic leading-tight px-2">
+                          {img.caption}
+                        </p>
                       )}
-                      referrerPolicy="no-referrer"
-                    />
+                    </div>
                   ))
                 ) : (
-                  arms.map((url, i) => (
-                    <img 
-                      key={i}
-                      src={url} 
-                      alt={`Coat of Arms ${i + 1}`} 
-                      className={cn(
-                        "object-contain border border-[#eaecf0] p-1",
-                        arms.length === 1 ? "max-h-[180px] w-full" : "max-h-[90px] max-w-[45%]"
+                  arms.map((img: any, i) => (
+                    <div key={i} className="space-y-1">
+                      <div className="flex justify-center">
+                        <img 
+                          src={img.url} 
+                          alt={img.caption || `Coat of Arms ${i + 1}`} 
+                          className={cn(
+                            "object-contain border border-[#eaecf0] p-1",
+                            arms.length === 1 ? "max-h-[180px] w-full" : "max-h-[100px] max-w-[80%]"
+                          )}
+                          referrerPolicy="no-referrer"
+                        />
+                      </div>
+                      {img.caption && (
+                        <p className="text-[10px] text-center text-[#54595d] italic leading-tight px-2">
+                          {img.caption}
+                        </p>
                       )}
-                      referrerPolicy="no-referrer"
-                    />
+                    </div>
                   ))
                 )}
               </div>
-              <p className="text-[10px] mt-2 text-center text-[#54595d] italic font-sans border-t border-[#f8f9fa] pt-1">
-                {activeTab === 'flags' ? `Flag(s) of ${article.title}` : `Coat(s) of arms of ${article.title}`}
-              </p>
+              {!flags.some((f: any) => f.caption) && !arms.some((a: any) => a.caption) && (
+                <p className="text-[10px] mt-2 text-center text-[#54595d] italic font-sans border-t border-[#f8f9fa] pt-1">
+                  {activeTab === 'flags' ? `Flag(s) of ${article.title}` : `Coat(s) of arms of ${article.title}`}
+                </p>
+              )}
             </>
           ) : (
             <>
-               <div className="flex justify-center p-1 min-h-[140px] items-center">
-                 {(flags[0] || arms[0]) && (
-                    <img 
-                      src={flags[0] || arms[0]} 
-                      alt={`Image of ${article.title}`} 
-                      className="max-h-[220px] w-full object-contain border border-[#eaecf0] shadow-sm"
-                      referrerPolicy="no-referrer"
-                    />
+               <div className="space-y-2 p-1 py-2">
+                 {((flags[0] as any) || (arms[0] as any)) && (
+                    <div className="space-y-2">
+                      <div className="flex justify-center">
+                        <img 
+                          src={(flags[0] as any)?.url || (arms[0] as any)?.url} 
+                          alt={`Image of ${article.title}`} 
+                          className="max-h-[260px] w-full object-contain border border-[#eaecf0] shadow-sm"
+                          referrerPolicy="no-referrer"
+                        />
+                      </div>
+                      {((flags[0] as any)?.caption || (arms[0] as any)?.caption) && (
+                        <p className="text-[10px] text-center text-[#54595d] italic leading-tight px-4">
+                          {(flags[0] as any)?.caption || (arms[0] as any)?.caption}
+                        </p>
+                      )}
+                    </div>
                  )}
                </div>
             </>

@@ -39,9 +39,37 @@
             }
           }
         },
+        "images": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "url": { "type": "string" },
+              "caption": { "type": "string" }
+            }
+          }
+        },
         "flagUrl": { "type": "string" },
-        "flags": { "type": "array", "items": { "type": "string" } },
-        "coatsOfArms": { "type": "array", "items": { "type": "string" } },
+        "flags": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "url": { "type": "string" },
+              "caption": { "type": "string" }
+            }
+          }
+        },
+        "coatsOfArms": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "url": { "type": "string" },
+              "caption": { "type": "string" }
+            }
+          }
+        },
         "authorId": { "type": "string" },
         "createdAt": { "type": "string", "format": "date-time" }
       },

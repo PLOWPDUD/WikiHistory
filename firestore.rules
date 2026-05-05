@@ -43,6 +43,9 @@ service cloud.firestore {
              data.authorId is string && data.authorId.size() <= 128 &&
              data.infobox is list && data.infobox.size() <= 50 &&
              data.sections is list && data.sections.size() <= 50 &&
+             (!('flags' in data) || data.flags is list) &&
+             (!('coatsOfArms' in data) || data.coatsOfArms is list) &&
+             (!('images' in data) || data.images is list) &&
              data.createdAt is timestamp;
     }
 
@@ -68,7 +71,7 @@ service cloud.firestore {
                             // Action: Edit Content
                             incoming().diff(existing()).affectedKeys().hasOnly([
                               'title', 'summary', 'type', 'infobox', 'sections', 
-                              'flagUrl', 'flags', 'coatsOfArms', 'updatedAt'
+                              'images', 'flagUrl', 'flags', 'coatsOfArms', 'updatedAt'
                             ])
                           )
                         )

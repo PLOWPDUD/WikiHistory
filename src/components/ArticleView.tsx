@@ -2,7 +2,7 @@
 import Markdown from 'react-markdown';
 import { Article } from '../types';
 import Infobox from './Infobox';
-import { BookOpen, Share2, History, Languages, Edit } from 'lucide-react';
+import { BookOpen, Share2, History, Languages, Edit, Image as ImageIcon } from 'lucide-react';
 import { formatDate } from '../lib/utils';
 import { useAuth } from '../context/AuthContext';
 
@@ -64,6 +64,34 @@ export default function ArticleView({ article, onEdit }: ArticleViewProps) {
                 ))}
               </ul>
             </nav>
+
+            {article.images && article.images.length > 0 && (
+              <div className="mb-12 border border-[#eaecf0] bg-[#f8f9fa] p-4 rounded-sm">
+                <h3 className="text-xs font-bold uppercase tracking-wider text-[#54595d] mb-4 border-b border-[#eaecf0] pb-2 flex items-center gap-2">
+                  <ImageIcon className="w-4 h-4" />
+                  Featured Archives
+                </h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {article.images.map((img, i) => (
+                    <figure key={i} className="bg-white border border-[#a2a9b1] p-1.5 shadow-sm hover:shadow-md transition-shadow group cursor-zoom-in">
+                      <div className="aspect-[4/3] overflow-hidden mb-2">
+                        <img 
+                          src={img.url} 
+                          alt={img.caption || `Archive image ${i+1}`} 
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                          referrerPolicy="no-referrer"
+                        />
+                      </div>
+                      {img.caption && (
+                        <figcaption className="text-[10px] leading-tight text-[#202122] px-1 py-1">
+                          {img.caption}
+                        </figcaption>
+                      )}
+                    </figure>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {article.sections.map((section, idx) => (
               <div key={idx} className="mb-12" id={section.title.replace(/\s+/g, '-')}>

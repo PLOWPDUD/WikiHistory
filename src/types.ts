@@ -27,9 +27,10 @@ export interface Article {
   type: ArticleType;
   infobox: InfoboxItem[];
   sections: Section[];
-  flagUrl?: string; // Main image (usually flag)
-  flags?: string[]; // Up to 3 flags
-  coatsOfArms?: string[]; // Up to 2 coats of arms
+  images?: SectionImage[];
+  flags?: SectionImage[]; // Up to 3 flags with captions
+  coatsOfArms?: SectionImage[]; // Up to 2 coats of arms with captions
+  flagUrl?: string; // Main image URL for backwards compatibility
   createdAt: any; 
   authorId: string;
 }
