@@ -1,0 +1,57 @@
+
+{
+  "entities": {
+    "Article": {
+      "title": "Wikipedia Article",
+      "description": "An AI-generated encyclopedia entry",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "summary": { "type": "string" },
+        "type": { "type": "string", "enum": ["country", "war", "event", "person", "culture"] },
+        "infobox": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "label": { "type": "string" },
+              "value": { "type": "string" }
+            }
+          }
+        },
+        "sections": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "title": { "type": "string" },
+              "content": { "type": "string" },
+              "images": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "url": { "type": "string" },
+                    "caption": { "type": "string" }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "flagUrl": { "type": "string" },
+        "flags": { "type": "array", "items": { "type": "string" } },
+        "coatsOfArms": { "type": "array", "items": { "type": "string" } },
+        "authorId": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["title", "summary", "type", "infobox", "sections", "authorId", "createdAt"]
+    }
+  },
+  "firestore": {
+    "articles": {
+      "schema": "Article",
+      "description": "Collection of all generated articles"
+    }
+  }
+}

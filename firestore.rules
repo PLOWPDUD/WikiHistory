@@ -1,0 +1,80 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // 0. Global Safety Net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Phase 3: Primitives
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isEmailVerified() {
+      return isSignedIn() && request.auth.token.email_verified == true;
+    }
+
+    function isAdmin() {
+      return isEmailVerified() && (
+        request.auth.token.email == 'videosonli5@gmail.com'
+      );
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    // Phase 4: Entity Validation
+    function isValidArticle(data) {
+      return data.keys().hasAll(['title', 'summary', 'type', 'infobox', 'sections', 'authorId', 'createdAt']) &&
+             data.keys().size() <= 12 && // added flagUrl, flags, coatsOfArms, updatedAt
+             data.title is string && data.title.size() <= 200 &&
+             data.summary is string && data.summary.size() <= 10000 &&
+             data.type in ['country', 'war', 'event', 'person', 'culture'] &&
+             data.authorId is string && data.authorId.size() <= 128 &&
+             data.infobox is list && data.infobox.size() <= 50 &&
+             data.sections is list && data.sections.size() <= 50 &&
+             data.createdAt is timestamp;
+    }
+
+    match /articles/{articleId} {
+      // Rule 8: Secure List Queries
+      // We allow public reading of all articles.
+      allow get: if isValidId(articleId);
+      allow list: if true;
+
+      allow create: if isSignedIn() && 
+                      isValidId(articleId) && 
+                      isValidArticle(incoming()) && 
+                      incoming().authorId == request.auth.uid &&
+                      incoming().createdAt == request.time;
+
+      allow update: if isSignedIn() && 
+                      isValidArticle(incoming()) && (
+                        isAdmin() || (
+                          incoming().authorId == existing().authorId &&
+                          incoming().authorId == request.auth.uid &&
+                          incoming().createdAt == existing().createdAt &&
+                          (
+                            // Action: Edit Content
+                            incoming().diff(existing()).affectedKeys().hasOnly([
+                              'title', 'summary', 'type', 'infobox', 'sections', 
+                              'flagUrl', 'flags', 'coatsOfArms', 'updatedAt'
+                            ])
+                          )
+                        )
+                      );
+
+      allow delete: if isSignedIn() && (isAdmin() || resource.data.authorId == request.auth.uid);
+    }
+  }
+}

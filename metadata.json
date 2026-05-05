@@ -1,0 +1,6 @@
+{
+  "name": "WikiHistory",
+  "description": "An AI-powered alternate history encyclopedia where users generate and browse Wikipedia-style articles for fictional countries, wars, and events.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["AI Content Generation", "Persistent Database"]
+}
